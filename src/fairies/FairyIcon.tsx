@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Image, Text, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
 import tailwind from 'tailwind-rn';
 
 const randomOffset = () => {
@@ -8,12 +8,14 @@ const randomOffset = () => {
 
 const FairyIcon: React.FC<{ icon: any, color: string, fontColor: string, name: string, dimensions: string }> = ({ icon, name, color, dimensions, fontColor }) => {
     let animationValue = new Animated.Value(0);
+    const ref = useRef<View>(null);
 
     const startAnimation = () => {
+        animationValue.addListener(offset => ref.current?.setNativeProps({ style: { transform: [{ translateY: offset.value }] } }))
         Animated.loop(
             Animated.sequence([
                 Animated.timing(animationValue, {
-                    toValue: 5,
+                    toValue: 6,
                     duration: 1000,
                     easing: Easing.inOut(Easing.ease),
                     useNativeDriver: true
@@ -30,12 +32,12 @@ const FairyIcon: React.FC<{ icon: any, color: string, fontColor: string, name: s
 
     useEffect(() => {
         const timeout = setTimeout(startAnimation, randomOffset());
-        return () => clearTimeout(timeout);
+        return () => { clearTimeout(timeout); animationValue.removeAllListeners(); };
     }, []);
 
     return (
-        <Animated.View style={{ transform: [{ translateY: animationValue }], ...tailwind('w-24 h-24 rounded-full flex justify-center items-center border-2 border-white relative'), backgroundColor: color, ...styles.shadow }}>
-            <Image source={icon} style={{ height: dimensions, width: dimensions }} />
+        <Animated.View ref={ref} style={{ ...tailwind('w-24 h-24 rounded-full flex justify-center items-center border-2 border-white relative'), backgroundColor: color, ...styles.shadow }}>
+            <Image source={icon} style={{ ...tailwind('absolute'), height: dimensions, width: dimensions }} />
             <Text style={{ ...tailwind('absolute -bottom-9 text-2xl'), color: fontColor, ...styles.textshadow }}>{name}</Text>
         </Animated.View>
     );
